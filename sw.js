@@ -1,9 +1,9 @@
 /* Service worker of the locked EnglishPath app: keeps the app on the device so it opens with no connection.
    index.html carries the list of valid codes, so it is fetched fresh when there is a connection (a new or cancelled
    code takes effect) and served from the saved copy when there is none. The cache name changes with every build. */
-const C = 'epa-2052de21e2';
+const C = 'epa-4b587b56b9';
 const CORE = ['./', 'index.html', 'manifest.webmanifest', 'logo.webp',
-  'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png', 'icons/apple-touch-icon.png', 'parent.html'];
+  'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png', 'icons/apple-touch-icon.png', 'parent.html', 'parent.webmanifest', 'icons/parent-192.png', 'icons/parent-512.png', 'icons/parent-apple.png', 'icons/parent-maskable-512.png'];
 self.addEventListener('install', e => e.waitUntil(caches.open(C).then(c => c.addAll(CORE)).then(() => self.skipWaiting())));
 self.addEventListener('activate', e => e.waitUntil(caches.keys()
   .then(ks => Promise.all(ks.filter(k => k.startsWith('epa-') && k !== C).map(k => caches.delete(k)))).then(() => self.clients.claim())));

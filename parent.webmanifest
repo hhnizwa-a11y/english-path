@@ -5,7 +5,7 @@
  "description": "متابعة وليّ الأمر لتقدّم ابنه في English Path",
  "lang": "ar",
  "dir": "rtl",
- "start_url": "parent.html",
+ "start_url": "parent.html?app=1",
  "scope": "./",
  "display": "standalone",
  "orientation": "any",

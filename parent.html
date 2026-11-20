@@ -95,12 +95,76 @@ label.l,p.l{display:block;font-size:16px;margin:10px 2px 4px;line-height:1.8}
 .chip[aria-pressed=true]{background:var(--sun)}
 .foot{font-size:14px;color:var(--soft);font-weight:500;line-height:2;text-align:center;margin-top:18px}
 .foot a{color:inherit}
+.inst{display:flex;align-items:center;gap:12px;width:100%;min-height:66px;border:3px solid var(--ink);border-radius:20px;background:var(--c);color:#fff;padding:8px 14px;font-size:18px;font-weight:800;line-height:1.8;text-align:start;margin-bottom:14px;box-shadow:0 6px 0 rgba(22,50,74,.16)}
+.inst:active{transform:translateY(2px)}
+.inst img{width:46px;height:46px;border-radius:12px;border:2px solid #fff;flex:none}
+.inst span{flex:1;min-width:0}
+.inst small{display:block;font-size:14px;font-weight:500;line-height:1.9}
+#instHelp ol{margin:4px 22px 0 0;font-size:16px;font-weight:500;line-height:2}
+#instHelp ol b{font-weight:800}
 [hidden]{display:none!important}
 </style>
 </head>
 <body>
 <main>
   <header class="top"><img src="logo.webp" alt=""><h1>صفحة وليّ الأمر<small><span class="en">EnglishPath</span> · تابعوا تقدّم ابنكم وضعوا له هدفًا</small></h1></header>
+
+  <!-- the page as an app of its own: shown on every screen, gone only inside the installed parent app -->
+  <button class="inst" id="instBtn" hidden aria-controls="instHelp"><img src="icons/parent-192.png" alt=""><span>📲 تنزيل تطبيق وليّ الأمر<small>يظهر على شاشة هاتفكم بأيقونته ويفتح على متابعة ابنكم</small></span></button>
+  <div class="card" id="instHelp" hidden>
+    <h3 id="instH">طريقة التنزيل</h3>
+    <p class="hint" id="instTxt"></p>
+    <ol id="instSteps"></ol>
+    <div class="row" style="margin-top:12px"><a class="btn go" id="instOpen" hidden style="text-decoration:none">فتح في Chrome</a><button class="btn lite" id="instCopy" hidden>نسخ رابط الصفحة</button><button class="btn lite" id="instX">إغلاق</button></div>
+    <p class="msg" id="instMsg" role="status"></p>
+  </div>
+  <script>
+  /* the page installs as an app of its own (parent.webmanifest). The button is on every screen. Where the browser offers
+     its install window (Chrome, Edge) the button opens it; where it does not (Safari, or a browser that keeps quiet) the
+     button explains the way by hand. It is gone only inside the installed parent app itself: the installed app starts at
+     parent.html?app=1, and a page opened inside the pupil's app (a window with no address bar too) comes from the app's
+     own link, so it still shows the button and says to open the page in the browser first. */
+  (()=>{const $=id=>document.getElementById(id);
+    if(!/^https?:$/.test(location.protocol))return;
+    const alone=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+    const SS=(k,v)=>{try{return v===undefined?sessionStorage.getItem(k):sessionStorage.setItem(k,v)}catch(e){return null}};
+    let own=SS('epa-parent-app');
+    if(own===null){let same=false;try{same=!!document.referrer&&new URL(document.referrer).origin===location.origin}catch(e){}
+      own=alone&&(/[?&]app=1\b/.test(location.search)||!same)?'1':'0';SS('epa-parent-app',own)}
+    if(alone&&own==='1')return;
+    const ua=navigator.userAgent,ios=/iphone|ipad|ipod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),android=/android/i.test(ua);
+    const link=location.origin+location.pathname;
+    let dp=null;
+    const help=()=>{let t,steps,open=false,copy=false;
+      if(alone){copy=true;open=android;
+        t='أنتم الآن داخل تطبيق الطالب، وتطبيق وليّ الأمر يُنزَّل من المتصفح.';
+        steps=ios?['انسخوا رابط الصفحة بالزر في الأسفل.','افتحوا <b>Safari</b> والصقوا الرابط.','اضغطوا زر المشاركة ثم <b>«إضافة إلى الشاشة الرئيسية»</b>.']
+          :['افتحوا هذه الصفحة في متصفح <b>Chrome</b> (بالزر في الأسفل، أو انسخوا الرابط والصقوه فيه).','اضغطوا هناك زر <b>«تنزيل تطبيق وليّ الأمر»</b> مرة أخرى.'];
+      }else if(ios){
+        t='على آيفون وآيباد يُضاف التطبيق من متصفح Safari:';
+        steps=['افتحوا هذه الصفحة في <b>Safari</b>.','اضغطوا زر المشاركة (المربّع الذي يخرج منه سهم).','اختاروا <b>«إضافة إلى الشاشة الرئيسية»</b> ثم «إضافة».'];
+      }else if(android){
+        t='إن لم تظهر نافذة التثبيت تلقائيًّا فالطريقة من قائمة المتصفح:';
+        steps=['اضغطوا القائمة <b>⋮</b> في أعلى المتصفح.','اختاروا <b>«تثبيت التطبيق»</b> أو <b>«إضافة إلى الشاشة الرئيسية»</b>.','اضغطوا «تثبيت».'];
+      }else{
+        t='على الحاسوب يُثبَّت التطبيق من متصفح Chrome أو Edge:';
+        steps=['اضغطوا رمز التثبيت في طرف شريط العنوان، أو افتحوا قائمة المتصفح <b>⋮</b>.','اختاروا <b>«تثبيت التطبيق»</b>.'];
+      }
+      $('instTxt').textContent=t;$('instSteps').innerHTML=steps.map(s=>'<li>'+s+'</li>').join('');
+      $('instOpen').hidden=!open;if(open)$('instOpen').href='intent://'+location.host+location.pathname+'#Intent;scheme='+location.protocol.slice(0,-1)+';package=com.android.chrome;end';
+      $('instCopy').hidden=!copy;$('instMsg').textContent='';$('instHelp').hidden=false;$('instHelp').scrollIntoView({block:'nearest'})};
+    addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e});
+    addEventListener('appinstalled',()=>{$('instBtn').hidden=true;$('instHelp').hidden=true});
+    $('instBtn').onclick=async()=>{
+      if(!dp){$('instHelp').hidden?help():($('instHelp').hidden=true);return}
+      const p=dp;dp=null;let r=null;try{p.prompt();r=await p.userChoice}catch(e){}
+      if(r&&r.outcome==='accepted'){$('instBtn').hidden=true;$('instHelp').hidden=true}else help()};
+    $('instX').onclick=()=>{$('instHelp').hidden=true};
+    $('instCopy').onclick=async()=>{let done=false;try{await navigator.clipboard.writeText(link);done=true}catch(e){}
+      $('instMsg').textContent=done?'نُسخ الرابط. الصقوه في المتصفح.':'الرابط: '+link};
+    $('instBtn').hidden=false;
+  })();
+  </script>
 
   <div class="card" id="s_off" hidden>
     <h3>⏳ قريبًا</h3>
